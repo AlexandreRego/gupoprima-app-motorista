@@ -19,7 +19,7 @@ export default function App() {
   const [msg, setMsg] = useState<string | null>(null);
 
   // COLOQUE AQUI O SEU LINK ATIVO DO SEU SERVIDOR (Render ou Localtunnel)
-  const API_URL = "https://many-parks-sneeze.loca.lt/api/ocorrencia";
+  const API_URL = "https://grupoprima-backend-api.onrender.com/api/ocorrencia";
 
   const obterGps = () => {
     if (!navigator.geolocation) {
