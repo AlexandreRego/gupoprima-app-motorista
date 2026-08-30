@@ -11,6 +11,7 @@ export default function App() {
   const [plate, setPlate] = useState<string>("");
   const [invoice, setInvoice] = useState<string>("");
   const [status, setStatus] = useState<string>("entregue");
+  const [recipientName, setRecipientName] = useState<string>("");
   const [comments, setComments] = useState<string>("");
   const [gps, setGps] = useState<GPSLocation | null>(null);
   const [base64Image, setBase64Image] = useState<string>("");
@@ -85,6 +86,7 @@ export default function App() {
           vehiclePlate: plate,
           invoice: invoice,
           status: status,
+          recipientName: status === "entregue" ? recipientName : "N/A", // Novo campo enviado dinamicamente
           comments: comments,
           gps: gps ? `${gps.lat}, ${gps.lng}` : "Não coletado",
           imageBase64: base64Image
@@ -96,6 +98,7 @@ export default function App() {
         setMsg("✅ Ocorrência enviada com sucesso!");
         setInvoice("");
         setComments("");
+        setRecipientName(""); // Limpa o campo do recebedor ao enviar com sucesso
         setPreview(null);
         setBase64Image("");
       } else {
@@ -156,8 +159,24 @@ export default function App() {
         >
           <option value="entregue">Entregue</option>
           <option value="avaria">Avaria</option>
-          <option value="recusado">Recusado</option>
+          <option value="recusado_cliente">Recusado pelo Cliente</option>
+          <option value="ausente">Destinatário Ausente</option>
+          <option value="endereco_nao_localizado">Endereço Não Encontrado</option>
         </select>
+
+        {/* Exibe o campo Recebedor somente quando a entrega for concluída com sucesso */}
+        {status === "entregue" && (
+          <>
+            <label style={{ fontSize: 12, color: "#94a3b8" }}>Nome do Recebedor *</label>
+            <input 
+              placeholder="Ex: José de Alencar" 
+              value={recipientName} 
+              onChange={e => setRecipientName(e.target.value)} 
+              required 
+              style={{ width: "100%", margin: "4px 0 12px 0", padding: 10, boxSizing: "border-box", borderRadius: 6, border: "1px solid #334155", backgroundColor: "#1e293b", color: "#fff" }} 
+            />
+          </>
+        )}
 
         <label style={{ fontSize: 12, color: "#94a3b8" }}>Observações / Detalhes (Opcional)</label>
         <textarea 
