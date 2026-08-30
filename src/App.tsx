@@ -18,7 +18,7 @@ export default function App() {
   const [loading, setLoading] = useState<boolean>(false);
   const [msg, setMsg] = useState<string | null>(null);
 
-  // COLOQUE AQUI O SEU LINK ATIVO DO SEU SERVIDOR (Render ou Localtunnel)
+  // LINK ATIVO DO GOOGLE APPS SCRIPT
   const API_URL = "https://script.google.com/macros/s/AKfycbzW5hjaTMYcfE6qOt_923vTBrD9fBVEHDoqc9wLkiv3cBRGNeNhpjS-H39biU7K-2TU/exec";
 
   const obterGps = () => {
@@ -72,15 +72,20 @@ export default function App() {
     setMsg(null);
     
     try {
+      // Envio direto ao Google Apps Script
       const res = await fetch(API_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        mode: "cors",
+        redirect: "follow", // 👉 ESSENCIAL: Segue o redirecionamento do Google
+        headers: { 
+          "Content-Type": "text/plain" // 👉 SOLUÇÃO DO ERRO: Evita o bloqueio de segurança CORS do navegador
+        },
         body: JSON.stringify({
           driverName: driver,
           vehiclePlate: plate,
-          invoice,
-          status,
-          comments,
+          invoice: invoice,
+          status: status,
+          comments: comments,
           gps: gps ? `${gps.lat}, ${gps.lng}` : "Não coletado",
           imageBase64: base64Image
         })
@@ -94,11 +99,11 @@ export default function App() {
         setPreview(null);
         setBase64Image("");
       } else {
-        setMsg("❌ Erro: " + data.message);
+        setMsg("❌ Erro: " + (data.message || data.error));
       }
     } catch (error) {
       console.error(error);
-      setMsg("❌ Erro ao conectar ao servidor de API.");
+      setMsg("❌ Erro ao conectar ao servidor do Google. Verifique sua conexão de rede.");
     } finally {
       setLoading(false);
     }
