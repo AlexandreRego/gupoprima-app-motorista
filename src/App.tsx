@@ -61,7 +61,7 @@ export default function App() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("https://sua-api.com/api/ocorrencia", {
+      const res = await fetch("https://grupoprima-backend-api.onrender.com", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
