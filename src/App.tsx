@@ -61,7 +61,7 @@ export default function App() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("https://gupoprima-app-motorista-steel.vercel.app/", {
+      const res = await fetch("https://fast-birds-vanish.loca.lt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
