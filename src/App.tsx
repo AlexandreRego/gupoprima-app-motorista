@@ -1,39 +1,42 @@
-// =========================================================================
-// PORTAL DO MOTORISTA (FRONTEND PWA) - CÓDIGO FONTE REAL DE PRODUÇÃO
-// =========================================================================
-// ONDE COLAR: No arquivo src/App.tsx do seu projeto React + Vite.
-// O QUE ELE FAZ: Tela móvel para o motorista inserir NF, GPS, tirar e compactar fotos.
+import { useState } from "react";
 
-import React, { useState } from "react";
+// Definição da estrutura do GPS para o TypeScript
+interface GPSLocation {
+  lat: number;
+  lng: number;
+}
 
 export default function App() {
-  const [driver, setDriver] = useState("");
-  const [plate, setPlate] = useState("");
-  const [invoice, setInvoice] = useState("");
-  const [status, setStatus] = useState("entregue");
-  const [comments, setComments] = useState("");
-  const [gps, setGps] = useState(null);
-  const [base64Image, setBase64Image] = useState("");
-  const [preview, setPreview] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [msg, setMsg] = useState(null);
+  const [driver, setDriver] = useState<string>("");
+  const [plate, setPlate] = useState<string>("");
+  const [invoice, setInvoice] = useState<string>("");
+  const [status, setStatus] = useState<string>("entregue");
+  const [comments, setComments] = useState<string>("");
+  const [gps, setGps] = useState<GPSLocation | null>(null);
+  const [base64Image, setBase64Image] = useState<string>("");
+  const [preview, setPreview] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  // COLOQUE AQUI O SEU LINK ATIVO DO SEU SERVIDOR (Render ou Localtunnel)
+  const API_URL = "https://many-parks-sneeze.loca.lt/api/ocorrencia";
 
   const obterGps = () => {
     if (!navigator.geolocation) {
-      alert("GPS não suportado.");
+      alert("GPS não suportado pelo seu navegador.");
       return;
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setGps({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        alert("GPS Capturado com Sucesso!");
+        alert("📍 GPS Capturado com Sucesso!");
       },
       () => alert("Erro ao capturar GPS. Ative a localização no seu aparelho.")
     );
   };
 
-  const handleFile = (e) => {
-    const file = e.target.files[0];
+  const handleFile = (e: any) => {
+    const file = e.target.files?.[0];
     if (!file) return;
     setPreview(URL.createObjectURL(file));
 
@@ -44,24 +47,32 @@ export default function App() {
         const canvas = document.createElement("canvas");
         let w = img.width;
         let h = img.height;
-        const max = 1200;
+        const max = 1200; // Limite de tamanho para compactar a foto
         if (w > h && w > max) { h *= max / w; w = max; }
         else if (h > max) { w *= max / h; h = max; }
         canvas.width = w;
         canvas.height = h;
-        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-        setBase64Image(canvas.toDataURL("image/jpeg", 0.7).split(",")[1]);
+        
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, w, h);
+          setBase64Image(canvas.toDataURL("image/jpeg", 0.7).split(",")[1]);
+        }
       };
-      img.src = evt.target.result;
+      if (evt.target?.result) {
+        img.src = evt.target.result as string;
+      }
     };
     reader.readAsDataURL(file);
   };
 
-  const enviar = async (e) => {
+  const enviar = async (e: any) => {
     e.preventDefault();
     setLoading(true);
+    setMsg(null);
+    
     try {
-      const res = await fetch("https://fast-birds-vanish.loca.lt", {
+      const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -74,17 +85,20 @@ export default function App() {
           imageBase64: base64Image
         })
       });
+      
       const data = await res.json();
       if (data.success) {
-        setMsg("Enviado com sucesso!");
+        setMsg("✅ Ocorrência enviada com sucesso!");
         setInvoice("");
+        setComments("");
         setPreview(null);
         setBase64Image("");
       } else {
-        setMsg("Erro: " + data.message);
+        setMsg("❌ Erro: " + data.message);
       }
-    } catch {
-      setMsg("Erro ao conectar ao servidor.");
+    } catch (error) {
+      console.error(error);
+      setMsg("❌ Erro ao conectar ao servidor de API.");
     } finally {
       setLoading(false);
     }
@@ -92,21 +106,92 @@ export default function App() {
 
   return (
     <div style={{ maxWidth: 450, margin: "20px auto", padding: 20, fontFamily: "sans-serif", backgroundColor: "#0f172a", color: "#fff", borderRadius: 12 }}>
-      <h2>Grupoprima Logística</h2>
-      {msg && <p style={{ color: "#10b981" }}>{msg}</p>}
+      <h2 style={{ textAlign: "center", marginBottom: 20, color: "#10b981" }}>Grupoprima Logística</h2>
+      
+      {msg && (
+        <div style={{ padding: 10, borderRadius: 6, backgroundColor: msg.includes("✅") ? "#064e3b" : "#7f1d1d", color: "#fff", marginBottom: 15, textAlign: "center" }}>
+          {msg}
+        </div>
+      )}
+      
       <form onSubmit={enviar}>
-        <input placeholder="Placa do Veículo" value={plate} onChange={e => setPlate(e.target.value.toUpperCase())} required style={{ width: "100%", margin: "8px 0", padding: 8, boxSizing: "border-box" }} />
-        <input placeholder="Nota Fiscal (apenas números)" type="number" value={invoice} onChange={e => setInvoice(e.target.value)} required style={{ width: "100%", margin: "8px 0", padding: 8, boxSizing: "border-box" }} />
-        <select value={status} onChange={e => setStatus(e.target.value)} style={{ width: "100%", margin: "8px 0", padding: 8, boxSizing: "border-box" }}>
+        <label style={{ fontSize: 12, color: "#94a3b8" }}>Nome do Motorista</label>
+        <input 
+          placeholder="Ex: João Silva" 
+          value={driver} 
+          onChange={e => setDriver(e.target.value)} 
+          required 
+          style={{ width: "100%", margin: "4px 0 12px 0", padding: 10, boxSizing: "border-box", borderRadius: 6, border: "1px solid #334155", backgroundColor: "#1e293b", color: "#fff" }} 
+        />
+
+        <label style={{ fontSize: 12, color: "#94a3b8" }}>Placa do Veículo</label>
+        <input 
+          placeholder="Ex: ABC1234" 
+          value={plate} 
+          onChange={e => setPlate(e.target.value.toUpperCase())} 
+          required 
+          style={{ width: "100%", margin: "4px 0 12px 0", padding: 10, boxSizing: "border-box", borderRadius: 6, border: "1px solid #334155", backgroundColor: "#1e293b", color: "#fff" }} 
+        />
+
+        <label style={{ fontSize: 12, color: "#94a3b8" }}>Nota Fiscal (Apenas números)</label>
+        <input 
+          placeholder="Ex: 12345" 
+          type="number" 
+          value={invoice} 
+          onChange={e => setInvoice(e.target.value)} 
+          required 
+          style={{ width: "100%", margin: "4px 0 12px 0", padding: 10, boxSizing: "border-box", borderRadius: 6, border: "1px solid #334155", backgroundColor: "#1e293b", color: "#fff" }} 
+        />
+
+        <label style={{ fontSize: 12, color: "#94a3b8" }}>Status da Entrega</label>
+        <select 
+          value={status} 
+          onChange={e => setStatus(e.target.value)} 
+          style={{ width: "100%", margin: "4px 0 12px 0", padding: 10, boxSizing: "border-box", borderRadius: 6, border: "1px solid #334155", backgroundColor: "#1e293b", color: "#fff" }}
+        >
           <option value="entregue">Entregue</option>
           <option value="avaria">Avaria</option>
           <option value="recusado">Recusado</option>
         </select>
-        <button type="button" onClick={obterGps} style={{ width: "100%", margin: "8px 0", padding: 8 }}>📍 Capturar GPS de Auditoria</button>
-        <input type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ width: "100%", margin: "8px 0" }} />
-        {preview && <img src={preview} style={{ width: "100%", height: 180, objectFit: "cover", borderRadius: 8 }} />}
-        <button type="submit" disabled={loading} style={{ width: "100%", background: "#10b981", color: "#fff", padding: 12, border: "none", fontWeight: "bold" }}>
-          {loading ? "Enviando..." : "Enviar Ocorrência à Central 🚀"}
+
+        <label style={{ fontSize: 12, color: "#94a3b8" }}>Observações / Detalhes (Opcional)</label>
+        <textarea 
+          placeholder="Ex: Cliente recusou por atraso..." 
+          value={comments} 
+          onChange={e => setComments(e.target.value)} 
+          rows={3}
+          style={{ width: "100%", margin: "4px 0 12px 0", padding: 10, boxSizing: "border-box", borderRadius: 6, border: "1px solid #334155", backgroundColor: "#1e293b", color: "#fff", resize: "none" }} 
+        />
+
+        <button 
+          type="button" 
+          onClick={obterGps} 
+          style={{ width: "100%", margin: "8px 0 16px 0", padding: 10, borderRadius: 6, border: "none", backgroundColor: gps ? "#065f46" : "#475569", color: "#fff", cursor: "pointer", fontWeight: "bold" }}
+        >
+          {gps ? "📍 GPS Coletado!" : "📍 Capturar GPS de Auditoria"}
+        </button>
+
+        <label style={{ fontSize: 12, color: "#94a3b8" }}>Foto do Canhoto / Ocorrência</label>
+        <input 
+          type="file" 
+          accept="image/*" 
+          capture="environment" 
+          onChange={handleFile} 
+          style={{ width: "100%", margin: "8px 0 16px 0" }} 
+        />
+
+        {preview && (
+          <div style={{ width: "100%", borderRadius: 8, overflow: "hidden", marginBottom: 16 }}>
+            <img src={preview} alt="Preview" style={{ width: "100%", height: 200, objectFit: "cover" }} />
+          </div>
+        )}
+
+        <button 
+          type="submit" 
+          disabled={loading} 
+          style={{ width: "100%", background: "#10b981", color: "#fff", padding: 14, border: "none", borderRadius: 6, fontWeight: "bold", fontSize: 16, cursor: "pointer" }}
+        >
+          {loading ? "Processando e Enviando..." : "Enviar Ocorrência à Central 🚀"}
         </button>
       </form>
     </div>
