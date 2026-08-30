@@ -19,7 +19,7 @@ export default function App() {
   const [msg, setMsg] = useState<string | null>(null);
 
   // COLOQUE AQUI O SEU LINK ATIVO DO SEU SERVIDOR (Render ou Localtunnel)
-  const API_URL = "https://grupoprima-backend-api.onrender.com/api/ocorrencia";
+  const API_URL = "https://script.google.com/macros/s/AKfycbzW5hjaTMYcfE6qOt_923vTBrD9fBVEHDoqc9wLkiv3cBRGNeNhpjS-H39biU7K-2TU/exec";
 
   const obterGps = () => {
     if (!navigator.geolocation) {
