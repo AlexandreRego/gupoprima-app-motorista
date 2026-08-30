@@ -20,7 +20,7 @@ export default function App() {
   const [msg, setMsg] = useState<string | null>(null);
 
   // LINK ATIVO DO GOOGLE APPS SCRIPT
-  const API_URL = "https://script.google.com/macros/s/AKfycbzW5hjaTMYcfE6qOt_923vTBrD9fBVEHDoqc9wLkiv3cBRGNeNhpjS-H39biU7K-2TU/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbwI1MhTrv6fZci2qwJyV_S4beK3vejoWldHhRw7m6_WEZbnOuoseuu4f0etqzfPwh9E/exec";
 
   const obterGps = () => {
     if (!navigator.geolocation) {
@@ -86,7 +86,7 @@ export default function App() {
           vehiclePlate: plate,
           invoice: invoice,
           status: status,
-          recipientName: status === "entregue" ? recipientName : "N/A", // Novo campo enviado dinamicamente
+          recipientName: status === "entregue" ? recipientName : "", // Envia o nome se entregue, senão envia em branco
           comments: comments,
           gps: gps ? `${gps.lat}, ${gps.lng}` : "Não coletado",
           imageBase64: base64Image
